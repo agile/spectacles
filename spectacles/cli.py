@@ -202,6 +202,7 @@ def main():
             args.mode,
             args.remote_reset,
             args.concurrency,
+            args.ref,
         )
     elif args.command == "assert":
         run_assert(
@@ -213,6 +214,7 @@ def main():
             args.port,
             args.api_version,
             args.remote_reset,
+            args.ref,
         )
 
 
@@ -363,6 +365,14 @@ def _build_sql_subparser(
         help="The branch of your project that spectacles will use to run queries.",
     )
     subparser.add_argument(
+        "--ref",
+        action=EnvVarAction,
+        env_var="LOOKER_GIT_REF",
+        help="A specific Git ref (sha) to reset the branch in Looker to. \
+            WARNING: This will delete any uncommited changes in the user's \
+            workspace.",
+    )
+    subparser.add_argument(
         "--explores",
         nargs="+",
         default=["*/*"],
@@ -422,6 +432,14 @@ def _build_assert_subparser(
         "--branch", action=EnvVarAction, env_var="LOOKER_GIT_BRANCH", required=True
     )
     subparser.add_argument(
+        "--ref",
+        action=EnvVarAction,
+        env_var="LOOKER_GIT_REF",
+        help="A specific Git ref (sha) to reset the branch in Looker to. \
+            WARNING: This will delete any uncommited changes in the user's \
+            workspace.",
+    )
+    subparser.add_argument(
         "--remote-reset",
         action="store_true",
         help="When set to true, the SQL validator will tell Looker to reset the \
@@ -438,7 +456,15 @@ def run_connect(
 
 
 def run_assert(
-    project, branch, base_url, client_id, client_secret, port, api_version, remote_reset
+    project,
+    branch,
+    base_url,
+    client_id,
+    client_secret,
+    port,
+    api_version,
+    remote_reset,
+    ref,
 ) -> None:
     runner = Runner(
         base_url,
@@ -449,6 +475,7 @@ def run_assert(
         port,
         api_version,
         remote_reset,
+        ref,
     )
     errors = runner.validate_data_tests()
     if errors:
@@ -472,6 +499,7 @@ def run_sql(
     mode,
     remote_reset,
     concurrency,
+    ref,
 ) -> None:
     """Runs and validates the SQL for each selected LookML dimension."""
     runner = Runner(
@@ -483,6 +511,7 @@ def run_sql(
         port,
         api_version,
         remote_reset,
+        ref,
     )
     errors = runner.validate_sql(explores, mode, concurrency)
     if errors:
